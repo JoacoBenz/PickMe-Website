@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Algunos productos no están disponibles' }, { status: 400 });
     }
 
-    const mpItems = items.map((item) => {
-      const product = products.find((p) => p.id === item.productId)!;
+    const mpItems = items.map((item: { productId: string; qty: number }) => {
+      const product = products.find((p: { id: string }) => p.id === item.productId)!;
       return {
         id: product.id,
         title: product.name,
