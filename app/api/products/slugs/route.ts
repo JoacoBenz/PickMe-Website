@@ -6,5 +6,5 @@ export async function GET() {
     where: { active: true },
     select: { slug: true },
   });
-  return NextResponse.json(products.map((p) => p.slug));
+  return NextResponse.json(products.map((p: { slug: string }) => p.slug));
 }
