@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
 import { formatARS } from '@/lib/utils';
-import { pinturas } from '@/lib/pinturas';
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,6 +12,7 @@ export default function Nav() {
   const [atTop, setAtTop] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
   const [cartHover, setCartHover] = useState(false);
+  const [slugs, setSlugs] = useState<string[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -20,12 +20,16 @@ export default function Nav() {
   const { items, total, itemCount, updateQty, removeItem, clearCart } = useCart();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  useEffect(() => {
+    fetch('/api/products/slugs').then(r => r.json()).then(setSlugs).catch(() => {});
+  }, []);
+
   const goToRandomPainting = () => {
-    if (isSpinning) return;
+    if (isSpinning || slugs.length === 0) return;
     setIsSpinning(true);
-    const random = pinturas[Math.floor(Math.random() * pinturas.length)];
+    const randomSlug = slugs[Math.floor(Math.random() * slugs.length)];
     setTimeout(() => {
-      router.push(`/catalogo/${random.slug}`);
+      router.push(`/catalogo/${randomSlug}`);
       setIsSpinning(false);
     }, 600);
   };

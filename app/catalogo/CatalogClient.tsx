@@ -4,8 +4,19 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatARS } from '@/lib/utils';
-import { pinturas } from '@/lib/pinturas';
 import { useCart } from '@/lib/cart-context';
+
+export interface CatalogProduct {
+  id: string;
+  name: string;
+  slug: string;
+  style: string;
+  color: string;
+  priceARS: number;
+  description: string | null;
+  imageUrl: string | null;
+  gradient: string | null;
+}
 
 const PRICE_RANGES: Record<string, [number, number]> = {
   'Todos': [0, Infinity],
@@ -22,9 +33,9 @@ const filterGroups: { key: FilterKey; label: string; options: string[] }[] = [
   { key: 'precio', label: 'Precio', options: ['Todos', '$0-10k', '$10k-25k', '$25k+'] },
 ];
 
-export default function CatalogClient() {
+export default function CatalogClient({ products }: { products: CatalogProduct[] }) {
   const { addItem } = useCart();
-  const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
     estilo: 'Todos',
@@ -32,14 +43,14 @@ export default function CatalogClient() {
     precio: 'Todos',
   });
 
-  const handleAddToCart = (p: typeof pinturas[number]) => {
+  const handleAddToCart = (p: CatalogProduct) => {
     addItem({
-      productId: String(p.id),
+      productId: p.id,
       slug: p.slug,
-      name: p.nombre,
-      price: p.precio,
+      name: p.name,
+      price: p.priceARS,
       qty: 1,
-      gradient: p.imagen || p.gradiente,
+      gradient: p.imageUrl || p.gradient || '',
     });
     setAddedIds((prev) => new Set(prev).add(p.id));
     setTimeout(() => {
@@ -53,13 +64,13 @@ export default function CatalogClient() {
 
   const filtered = useMemo(() => {
     const [min, max] = PRICE_RANGES[filters.precio] || [0, Infinity];
-    return pinturas.filter((p) => {
-      const estiloOk = filters.estilo === 'Todos' || p.estilo === filters.estilo;
+    return products.filter((p) => {
+      const estiloOk = filters.estilo === 'Todos' || p.style === filters.estilo;
       const colorOk = filters.color === 'Todos' || p.color === filters.color;
-      const precioOk = p.precio >= min && p.precio < max;
+      const precioOk = p.priceARS >= min && p.priceARS < max;
       return estiloOk && colorOk && precioOk;
     });
-  }, [filters]);
+  }, [filters, products]);
 
   return (
     <section className="catalog-section">
@@ -106,17 +117,17 @@ export default function CatalogClient() {
                 style={{ animationDelay: `${i * 0.07}s` }}
               >
                 <div className="painting-card__art">
-                  {p.imagen ? (
+                  {p.imageUrl ? (
                     <Image
-                      src={p.imagen}
-                      alt={p.nombre}
+                      src={p.imageUrl}
+                      alt={p.name}
                       className="painting-card__art-inner painting-card__img"
                       width={400}
                       height={400}
                       loading="lazy"
                     />
                   ) : (
-                    <div className="painting-card__art-inner" style={{ background: p.gradiente }}></div>
+                    <div className="painting-card__art-inner" style={{ background: p.gradient || '' }}></div>
                   )}
                   <div className="painting-card__overlay">
                     <Link href={`/catalogo/${p.slug}`} className="painting-card__overlay-btn">
@@ -126,10 +137,10 @@ export default function CatalogClient() {
                 </div>
                 <div className="painting-card__body">
                   <div className="painting-card__meta">
-                    <span className="painting-card__badge">{p.estilo}</span>
-                    <span className="painting-card__price">{formatARS(p.precio)}</span>
+                    <span className="painting-card__badge">{p.style}</span>
+                    <span className="painting-card__price">{formatARS(p.priceARS)}</span>
                   </div>
-                  <h3 className="painting-card__name">{p.nombre}</h3>
+                  <h3 className="painting-card__name">{p.name}</h3>
                   <div className="painting-card__actions">
                     <Link href={`/catalogo/${p.slug}`} className="painting-card__btn painting-card__btn--outline">
                       Ver detalle

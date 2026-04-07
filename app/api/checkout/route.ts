@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { preference } from '@/lib/mercadopago';
-import { pinturas } from '@/lib/pinturas';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -14,25 +13,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Carrito vacío' }, { status: 400 });
     }
 
-    // Validate products against pinturas catalog (source of truth)
+    // Fetch products from database to validate prices
+    const productIds = items.map((i) => i.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds }, active: true },
+    });
+
+    if (products.length !== items.length) {
+      return NextResponse.json({ error: 'Algunos productos no están disponibles' }, { status: 400 });
+    }
+
     const mpItems = items.map((item) => {
-      const product = pinturas.find((p) => String(p.id) === item.productId);
-      if (!product) return null;
+      const product = products.find((p) => p.id === item.productId)!;
       return {
-        id: String(product.id),
-        title: product.nombre,
-        unit_price: product.precio,
+        id: product.id,
+        title: product.name,
+        unit_price: product.priceARS,
         quantity: item.qty,
         currency_id: 'ARS' as const,
       };
     });
 
-    if (mpItems.some((i) => i === null)) {
-      return NextResponse.json({ error: 'Algunos productos no están disponibles' }, { status: 400 });
-    }
-
-    const validItems = mpItems as NonNullable<(typeof mpItems)[number]>[];
-    const totalARS = validItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+    const totalARS = mpItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
 
     // Create order
     const order = await prisma.order.create({
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const mpPref = await preference.create({
       body: {
-        items: validItems,
+        items: mpItems,
         ...(!isLocalhost && {
           back_urls: {
             success: `${SITE_URL}/orden/confirmada`,

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
 import { formatARS } from '@/lib/utils';
-import { pinturas } from '@/lib/pinturas';
+import { prisma } from '@/lib/prisma';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -11,22 +12,27 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = pinturas.find((p) => p.slug === slug);
+  const product = await prisma.product.findUnique({ where: { slug } });
   if (!product) return { title: 'Producto no encontrado' };
   return {
-    title: product.nombre,
-    description: product.descripcion,
+    title: product.name,
+    description: product.description || '',
   };
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = pinturas.find((p) => p.slug === slug);
+  const product = await prisma.product.findUnique({ where: { slug } });
   if (!product) notFound();
 
-  const related = pinturas
-    .filter((p) => p.slug !== slug && (p.estilo === product.estilo || p.color === product.color))
-    .slice(0, 3);
+  const related = await prisma.product.findMany({
+    where: {
+      slug: { not: slug },
+      active: true,
+      OR: [{ style: product.style }, { color: product.color }],
+    },
+    take: 3,
+  });
 
   return (
     <>
@@ -36,26 +42,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
           Volver al catálogo
         </Link>
         <div className="product-detail__inner">
-          {product.imagen ? (
-            <img
-              src={product.imagen}
-              alt={product.nombre}
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
               className="product-detail__art product-detail__img"
+              width={600}
+              height={600}
+              priority
             />
           ) : (
-            <div className="product-detail__art" style={{ background: product.gradiente }}></div>
+            <div className="product-detail__art" style={{ background: product.gradient || '' }}></div>
           )}
           <div className="product-detail__info">
-            <span className="painting-card__badge">{product.estilo} · {product.color}</span>
-            <h1 className="product-detail__name">{product.nombre}</h1>
-            <p className="product-detail__desc">{product.descripcion}</p>
-            <div className="product-detail__price">{formatARS(product.precio)}</div>
+            <span className="painting-card__badge">{product.style} · {product.color}</span>
+            <h1 className="product-detail__name">{product.name}</h1>
+            <p className="product-detail__desc">{product.description}</p>
+            <div className="product-detail__price">{formatARS(product.priceARS)}</div>
             <AddToCartButton
-              productId={String(product.id)}
+              productId={product.id}
               slug={product.slug}
-              name={product.nombre}
-              price={product.precio}
-              gradient={product.imagen || product.gradiente}
+              name={product.name}
+              price={product.priceARS}
+              gradient={product.imageUrl || product.gradient || ''}
             />
           </div>
         </div>
@@ -69,15 +78,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {related.map((p) => (
                 <div key={p.id} className="painting-card">
                   <div className="painting-card__art">
-                    {p.imagen ? (
-                      <img
-                        src={p.imagen}
-                        alt={p.nombre}
+                    {p.imageUrl ? (
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.name}
                         className="painting-card__art-inner painting-card__img"
+                        width={400}
+                        height={400}
                         loading="lazy"
                       />
                     ) : (
-                      <div className="painting-card__art-inner" style={{ background: p.gradiente }}></div>
+                      <div className="painting-card__art-inner" style={{ background: p.gradient || '' }}></div>
                     )}
                     <div className="painting-card__overlay">
                       <Link href={`/catalogo/${p.slug}`} className="painting-card__overlay-btn">Ver detalle</Link>
@@ -85,10 +96,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                   <div className="painting-card__body">
                     <div className="painting-card__meta">
-                      <span className="painting-card__badge">{p.estilo}</span>
-                      <span className="painting-card__price">{formatARS(p.precio)}</span>
+                      <span className="painting-card__badge">{p.style}</span>
+                      <span className="painting-card__price">{formatARS(p.priceARS)}</span>
                     </div>
-                    <h3 className="painting-card__name">{p.nombre}</h3>
+                    <h3 className="painting-card__name">{p.name}</h3>
                     <Link href={`/catalogo/${p.slug}`} className="painting-card__btn">Ver detalle</Link>
                   </div>
                 </div>
