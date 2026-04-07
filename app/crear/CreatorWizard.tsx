@@ -146,10 +146,14 @@ export function renderFrameToCanvas(
   canvas.width = w;
   canvas.height = h;
 
+  // Scale factor: all margins/borders are relative to the short side
+  const base = Math.min(w, h);
+  const s = (px: number) => Math.round((base / 600) * px);
+
   // Clear
   ctx.clearRect(0, 0, w, h);
 
-  // Draw image scaled to fill the canvas exactly (no crop since aspect matches)
+  // Draw image to fill area (no crop since aspect matches)
   const drawImage = (x: number, y: number, iw: number, ih: number) => {
     const scale = Math.min(iw / image.width, ih / image.height);
     const sw = image.width * scale;
@@ -163,8 +167,8 @@ export function renderFrameToCanvas(
       break;
     }
     case 'minimal': {
-      const mat = 24;
-      const border = 3;
+      const mat = s(24);
+      const border = s(3) || 1;
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, w, h);
       const iw = w - mat * 2;
@@ -181,18 +185,18 @@ export function renderFrameToCanvas(
       break;
     }
     case 'dorado': {
-      const margin = 18;
-      const margin2 = 28;
+      const margin = s(18);
+      const margin2 = s(28);
       drawImage(0, 0, w, h);
       ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = s(1.5) || 1;
       ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
       ctx.strokeStyle = '#C9A96E';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = s(1) || 1;
       ctx.strokeRect(margin2, margin2, w - margin2 * 2, h - margin2 * 2);
       ctx.strokeStyle = '#C9A96E';
-      ctx.lineWidth = 2;
-      const cLen = 18;
+      ctx.lineWidth = s(2) || 1;
+      const cLen = s(18);
       const cm = margin2;
       ctx.beginPath(); ctx.moveTo(cm, cm + cLen); ctx.lineTo(cm, cm); ctx.lineTo(cm + cLen, cm); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(w - cm - cLen, cm); ctx.lineTo(w - cm, cm); ctx.lineTo(w - cm, cm + cLen); ctx.stroke();
@@ -202,13 +206,13 @@ export function renderFrameToCanvas(
     }
     case 'rustico': {
       const browns = ['#8B7355', '#A0845C', '#6B5B3E', '#8B7355', '#A0845C', '#6B5B3E', '#8B7355', '#A0845C', '#6B5B3E', '#8B7355'];
-      const frameW = 20;
+      const frameW = s(20);
       ctx.fillStyle = browns[0];
       ctx.fillRect(0, 0, w, h);
       for (let i = 0; i < 10; i++) {
         ctx.strokeStyle = browns[i];
-        ctx.lineWidth = 2;
-        const off = 2 + i * 2;
+        ctx.lineWidth = s(2) || 1;
+        const off = s(2) + i * (s(2) || 1);
         ctx.strokeRect(off, off, w - off * 2, h - off * 2);
       }
       const iw = w - frameW * 2;
@@ -222,13 +226,14 @@ export function renderFrameToCanvas(
       break;
     }
     case 'flotante': {
-      const margin = 30;
+      const margin = s(30);
+      const blur = s(30);
       ctx.fillStyle = '#F5F1EB';
       ctx.fillRect(0, 0, w, h);
       ctx.shadowColor = 'rgba(26,26,46,0.25)';
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = blur;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 8;
+      ctx.shadowOffsetY = s(8);
       ctx.fillStyle = '#FFF';
       ctx.fillRect(margin, margin, w - margin * 2, h - margin * 2);
       ctx.shadowColor = 'transparent';
