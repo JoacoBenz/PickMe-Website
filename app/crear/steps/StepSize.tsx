@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { SIZES, renderFrameToCanvas, type FrameId } from '../CreatorWizard';
 import { formatARS } from '@/lib/utils';
 
@@ -14,15 +14,15 @@ interface StepSizeProps {
 
 export default function StepSize({ sizeIndex, image, frame, onSelect, getCanvasDataUrl }: StepSizeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previewUrl = useRef<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
-  // Generate preview when frame/image changes
+  // Generate preview when frame/image/size changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !image) return;
     const size = SIZES[sizeIndex];
     renderFrameToCanvas(canvas, image, frame, size);
-    previewUrl.current = canvas.toDataURL('image/png');
+    setPreviewUrl(canvas.toDataURL('image/png'));
   }, [image, frame, sizeIndex]);
 
   const currentSize = SIZES[sizeIndex];
@@ -35,7 +35,7 @@ export default function StepSize({ sizeIndex, image, frame, onSelect, getCanvasD
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       <div className="step-size__header">
-        <h2 className="step-size__title">Elige el tamano</h2>
+        <h2 className="step-size__title">Elegí el tamaño</h2>
         <p className="step-size__desc">
           Visualiza como queda tu cuadro en una habitacion real. Elegí el tamaño ideal.
         </p>
@@ -57,8 +57,8 @@ export default function StepSize({ sizeIndex, image, frame, onSelect, getCanvasD
                 transition: 'width 0.5s ease, height 0.5s ease',
               }}
             >
-              {previewUrl.current ? (
-                <img src={previewUrl.current} alt="Preview" className="room-mockup__img" />
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="room-mockup__img" />
               ) : (
                 <div className="room-mockup__placeholder" />
               )}

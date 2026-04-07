@@ -19,17 +19,26 @@ export default function StepUpload({ imageDataUrl, onUpload, onRemove }: StepUpl
       return;
     }
     if (!file.type.startsWith('image/')) {
-      alert('Solo se permiten archivos de imagen');
+      alert('Solo se permiten archivos de imagen. Formatos aceptados: JPG, PNG, WEBP.');
       return;
     }
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      alert('Error al leer el archivo. Intentá con otra imagen.');
+    };
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
+      if (!dataUrl) {
+        alert('Error al procesar la imagen. Intentá con otra.');
+        return;
+      }
       const img = new Image();
+      img.onerror = () => {
+        alert('No se pudo cargar la imagen. Verificá que el archivo no esté dañado.');
+      };
       img.onload = () => {
         setRevealing(true);
-        // Wait for reveal animation, then notify parent
         setTimeout(() => {
           onUpload(img, dataUrl);
         }, 1200);
