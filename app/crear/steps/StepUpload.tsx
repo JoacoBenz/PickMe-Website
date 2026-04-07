@@ -81,6 +81,7 @@ export default function StepUpload({ imageDataUrl, onUpload, onRemove }: StepUpl
             type="file"
             accept="image/*"
             className="upload-zone__input"
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleFile(file);
