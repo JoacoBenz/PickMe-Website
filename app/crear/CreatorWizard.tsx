@@ -119,6 +119,20 @@ function reducer(state: WizardState, action: Action): WizardState {
 }
 
 /* ── Canvas rendering ── */
+/**
+ * Calculates canvas dimensions that preserve the image's aspect ratio.
+ * The longest side uses size.w, the other scales proportionally.
+ */
+function calcCanvasSize(image: HTMLImageElement, size: SizeOption): { w: number; h: number } {
+  const imgRatio = image.width / image.height;
+  if (imgRatio >= 1) {
+    // Landscape or square
+    return { w: size.w, h: Math.round(size.w / imgRatio) };
+  }
+  // Portrait
+  return { w: Math.round(size.h * imgRatio), h: size.h };
+}
+
 export function renderFrameToCanvas(
   canvas: HTMLCanvasElement,
   image: HTMLImageElement,
@@ -128,126 +142,105 @@ export function renderFrameToCanvas(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  canvas.width = size.w;
-  canvas.height = size.h;
+  const { w, h } = calcCanvasSize(image, size);
+  canvas.width = w;
+  canvas.height = h;
 
   // Clear
-  ctx.clearRect(0, 0, size.w, size.h);
+  ctx.clearRect(0, 0, w, h);
+
+  // Draw image scaled to fill the canvas exactly (no crop since aspect matches)
+  const drawImage = (x: number, y: number, iw: number, ih: number) => {
+    const scale = Math.min(iw / image.width, ih / image.height);
+    const sw = image.width * scale;
+    const sh = image.height * scale;
+    ctx.drawImage(image, x + (iw - sw) / 2, y + (ih - sh) / 2, sw, sh);
+  };
 
   switch (frame) {
     case 'sin-marco': {
-      // Edge to edge
-      const scale = Math.max(size.w / image.width, size.h / image.height);
-      const sw = image.width * scale;
-      const sh = image.height * scale;
-      ctx.drawImage(image, (size.w - sw) / 2, (size.h - sh) / 2, sw, sh);
+      drawImage(0, 0, w, h);
       break;
     }
     case 'minimal': {
-      // White mat + thin black border
       const mat = 24;
       const border = 3;
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, size.w, size.h);
-      // Draw image inside mat
-      const iw = size.w - mat * 2;
-      const ih = size.h - mat * 2;
-      const scale = Math.max(iw / image.width, ih / image.height);
-      const sw = image.width * scale;
-      const sh = image.height * scale;
+      ctx.fillRect(0, 0, w, h);
+      const iw = w - mat * 2;
+      const ih = h - mat * 2;
       ctx.save();
       ctx.beginPath();
       ctx.rect(mat, mat, iw, ih);
       ctx.clip();
-      ctx.drawImage(image, mat + (iw - sw) / 2, mat + (ih - sh) / 2, sw, sh);
+      drawImage(mat, mat, iw, ih);
       ctx.restore();
-      // Black border
       ctx.strokeStyle = '#1A1A2E';
       ctx.lineWidth = border;
       ctx.strokeRect(mat - border / 2, mat - border / 2, iw + border, ih + border);
       break;
     }
     case 'dorado': {
-      // Gold border with ornaments
       const margin = 18;
       const margin2 = 28;
-      // Draw image as background
-      const scale = Math.max(size.w / image.width, size.h / image.height);
-      const sw = image.width * scale;
-      const sh = image.height * scale;
-      ctx.drawImage(image, (size.w - sw) / 2, (size.h - sh) / 2, sw, sh);
-      // Outer subtle frame
+      drawImage(0, 0, w, h);
       ctx.strokeStyle = 'rgba(255,255,255,0.18)';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(margin, margin, size.w - margin * 2, size.h - margin * 2);
-      // Inner gold frame
+      ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
       ctx.strokeStyle = '#C9A96E';
       ctx.lineWidth = 1;
-      ctx.strokeRect(margin2, margin2, size.w - margin2 * 2, size.h - margin2 * 2);
-      // Corner ornaments
+      ctx.strokeRect(margin2, margin2, w - margin2 * 2, h - margin2 * 2);
       ctx.strokeStyle = '#C9A96E';
       ctx.lineWidth = 2;
       const cLen = 18;
       const cm = margin2;
       ctx.beginPath(); ctx.moveTo(cm, cm + cLen); ctx.lineTo(cm, cm); ctx.lineTo(cm + cLen, cm); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(size.w - cm - cLen, cm); ctx.lineTo(size.w - cm, cm); ctx.lineTo(size.w - cm, cm + cLen); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cm, size.h - cm - cLen); ctx.lineTo(cm, size.h - cm); ctx.lineTo(cm + cLen, size.h - cm); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(size.w - cm - cLen, size.h - cm); ctx.lineTo(size.w - cm, size.h - cm); ctx.lineTo(size.w - cm, size.h - cm - cLen); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w - cm - cLen, cm); ctx.lineTo(w - cm, cm); ctx.lineTo(w - cm, cm + cLen); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cm, h - cm - cLen); ctx.lineTo(cm, h - cm); ctx.lineTo(cm + cLen, h - cm); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w - cm - cLen, h - cm); ctx.lineTo(w - cm, h - cm); ctx.lineTo(w - cm, h - cm - cLen); ctx.stroke();
       break;
     }
     case 'rustico': {
-      // Brown wood-like layers
       const browns = ['#8B7355', '#A0845C', '#6B5B3E', '#8B7355', '#A0845C', '#6B5B3E', '#8B7355', '#A0845C', '#6B5B3E', '#8B7355'];
       const frameW = 20;
       ctx.fillStyle = browns[0];
-      ctx.fillRect(0, 0, size.w, size.h);
-      // Draw alternating brown rects
+      ctx.fillRect(0, 0, w, h);
       for (let i = 0; i < 10; i++) {
         ctx.strokeStyle = browns[i];
         ctx.lineWidth = 2;
         const off = 2 + i * 2;
-        ctx.strokeRect(off, off, size.w - off * 2, size.h - off * 2);
+        ctx.strokeRect(off, off, w - off * 2, h - off * 2);
       }
-      // Draw image inside frame
-      const iw = size.w - frameW * 2;
-      const ih = size.h - frameW * 2;
-      const scale = Math.max(iw / image.width, ih / image.height);
-      const sw = image.width * scale;
-      const sh = image.height * scale;
+      const iw = w - frameW * 2;
+      const ih = h - frameW * 2;
       ctx.save();
       ctx.beginPath();
       ctx.rect(frameW, frameW, iw, ih);
       ctx.clip();
-      ctx.drawImage(image, frameW + (iw - sw) / 2, frameW + (ih - sh) / 2, sw, sh);
+      drawImage(frameW, frameW, iw, ih);
       ctx.restore();
       break;
     }
     case 'flotante': {
-      // Floating effect with shadow
       const margin = 30;
       ctx.fillStyle = '#F5F1EB';
-      ctx.fillRect(0, 0, size.w, size.h);
-      // Shadow
+      ctx.fillRect(0, 0, w, h);
       ctx.shadowColor = 'rgba(26,26,46,0.25)';
       ctx.shadowBlur = 30;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 8;
       ctx.fillStyle = '#FFF';
-      ctx.fillRect(margin, margin, size.w - margin * 2, size.h - margin * 2);
+      ctx.fillRect(margin, margin, w - margin * 2, h - margin * 2);
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
-      // Draw image
-      const iw = size.w - margin * 2;
-      const ih = size.h - margin * 2;
-      const scale = Math.max(iw / image.width, ih / image.height);
-      const sw = image.width * scale;
-      const sh = image.height * scale;
+      const iw = w - margin * 2;
+      const ih = h - margin * 2;
       ctx.save();
       ctx.beginPath();
       ctx.rect(margin, margin, iw, ih);
       ctx.clip();
-      ctx.drawImage(image, margin + (iw - sw) / 2, margin + (ih - sh) / 2, sw, sh);
+      drawImage(margin, margin, iw, ih);
       ctx.restore();
       break;
     }

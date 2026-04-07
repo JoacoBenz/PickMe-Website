@@ -27,8 +27,11 @@ export default function StepSize({ sizeIndex, image, frame, onSelect, getCanvasD
 
   const currentSize = SIZES[sizeIndex];
   // Scale: wall is ~250cm wide, painting cm maps proportionally
-  const wallPx = 600; // px for room mockup width
-  const paintingPx = (wallPx / 250) * currentSize.cm;
+  const wallPx = 600;
+  const paintingW = (wallPx / 250) * currentSize.cm;
+  // Calculate height based on image aspect ratio
+  const imgRatio = image ? image.width / image.height : 1;
+  const paintingH = imgRatio >= 1 ? paintingW / imgRatio : paintingW * (1 / imgRatio);
 
   return (
     <div className="step-size">
@@ -46,14 +49,14 @@ export default function StepSize({ sizeIndex, image, frame, onSelect, getCanvasD
         <div className="room-mockup">
           <div className="room-mockup__wall">
             {/* Hanging wire */}
-            <div className="room-mockup__wire" style={{ width: Math.min(paintingPx * 0.4, 80) }} />
+            <div className="room-mockup__wire" style={{ width: Math.min(paintingW * 0.4, 80) }} />
 
             {/* The painting on the wall */}
             <div
               className="room-mockup__painting"
               style={{
-                width: paintingPx,
-                height: currentSize.w === currentSize.h ? paintingPx : paintingPx * (currentSize.h / currentSize.w),
+                width: paintingW,
+                height: paintingH,
                 transition: 'width 0.5s ease, height 0.5s ease',
               }}
             >
