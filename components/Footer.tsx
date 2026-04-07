@@ -11,7 +11,7 @@ export default function Footer() {
               Arte decorativo único y personalizado para transformar cualquier espacio. Cada cuadro es una historia.
             </p>
             <div className="footer__social" aria-label="Redes sociales">
-              <a href="#" className="footer__social-btn" aria-label="Instagram">
+              <a href="https://www.instagram.com/pickme_retratos" target="_blank" rel="noopener noreferrer" className="footer__social-btn" aria-label="Instagram">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -46,8 +46,8 @@ export default function Footer() {
             <div className="footer__col-title">Contacto</div>
             <ul className="footer__links">
               <li><a href="mailto:hola@pickme.art" className="footer__link">hola@pickme.art</a></li>
-              <li><a href="tel:+5491112345678" className="footer__link">+54 9 11 1234-5678</a></li>
-              <li><span className="footer__link" style={{ cursor: 'default' }}>Buenos Aires, Argentina</span></li>
+              <li><a href="https://wa.me/5492944805273?text=Hola%20Pick%20Me" target="_blank" rel="noopener noreferrer" className="footer__link">WhatsApp</a></li>
+              <li><a href="https://www.instagram.com/pickme_retratos" target="_blank" rel="noopener noreferrer" className="footer__link">@pickme_retratos</a></li>
             </ul>
           </div>
         </div>

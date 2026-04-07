@@ -1520,7 +1520,7 @@ h1, h2, h3, h4 {
 .form-field textarea,
 .form-field select {
   width: 100%;
-  padding: 20px 16px 8px;
+  padding: 26px 16px 10px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg);
@@ -1534,8 +1534,8 @@ h1, h2, h3, h4 {
 }
 
 .form-field textarea {
-  min-height: 130px;
-  padding-top: 22px;
+  min-height: 140px;
+  padding-top: 28px;
   line-height: 1.7;
 }
 
