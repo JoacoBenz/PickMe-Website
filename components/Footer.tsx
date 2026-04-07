@@ -45,9 +45,16 @@ export default function Footer() {
           <div>
             <div className="footer__col-title">Contacto</div>
             <ul className="footer__links">
-              <li><a href="mailto:hola@pickme.art" className="footer__link">hola@pickme.art</a></li>
+              <li><a href="mailto:soporte@pickme.art" className="footer__link">soporte@pickme.art</a></li>
               <li><a href="https://wa.me/5492944805273?text=Hola%20Pick%20Me" target="_blank" rel="noopener noreferrer" className="footer__link">WhatsApp</a></li>
-              <li><a href="https://www.instagram.com/pickme_retratos" target="_blank" rel="noopener noreferrer" className="footer__link">@pickme_retratos</a></li>
+              <li><a href="https://www.instagram.com/pickme_retratos" target="_blank" rel="noopener noreferrer" className="footer__link" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                pickme_retratos
+              </a></li>
             </ul>
           </div>
         </div>

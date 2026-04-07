@@ -98,7 +98,7 @@ export default function ContactClient() {
               <div>
                 <div className="contact-info__label">Email</div>
                 <div className="contact-info__value">
-                  <a href="mailto:hola@pickme.art" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px' }}>hola@pickme.art</a>
+                  <a href="mailto:soporte@pickme.art" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px' }}>soporte@pickme.art</a>
                 </div>
               </div>
             </div>
